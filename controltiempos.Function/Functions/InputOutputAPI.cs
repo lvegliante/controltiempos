@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.Table;
 using Newtonsoft.Json;
 using System;
@@ -153,14 +154,14 @@ namespace controltiempos.Function.Functions
         [FunctionName(nameof(GetAllInputsAndOutputs))]
         public static async Task<IActionResult> GetAllInputsAndOutputs(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "inputoutput")] HttpRequest req,
-            [Table("inputoutput", Connection = "AzureWebJobsStorage")] CloudTable todoTable,
+            [Table("inputoutput", Connection = "AzureWebJobsStorage")] CloudTable timesTable,
             ILogger log)
         {
-            log.LogInformation("Get all todos recived.");
+            log.LogInformation("Get all inputs and outputs recived.");
 
             TableQuery<InputOutputEntity> query = new TableQuery<InputOutputEntity>();
-            TableQuerySegment<InputOutputEntity> inputOutputs = await todoTable.ExecuteQuerySegmentedAsync(query, null);
-            string message = "Retrieved all todos.";
+            TableQuerySegment<InputOutputEntity> inputOutputs = await timesTable.ExecuteQuerySegmentedAsync(query, null);
+            string message = "Retrieved all inputs and outputs.";
             log.LogInformation(message);
 
             return new OkObjectResult(new Response
@@ -168,6 +169,67 @@ namespace controltiempos.Function.Functions
                 IsSuccess = true,
                 Message = message,
                 Result = inputOutputs
+            });
+        }
+
+        [FunctionName(nameof(GetInputAndOutputById))]
+        public static IActionResult GetInputAndOutputById(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "inputoutput/{id}")] HttpRequest req,
+            [Table("inputoutput", "INPUTOUPUT", "{id}", Connection = "AzureWebJobsStorage")] InputOutputEntity inputOutputEntity,
+            string id,
+            ILogger log)
+        {
+
+            if (inputOutputEntity == null)
+            {
+                return new BadRequestObjectResult(new Response
+                {
+                    IsSuccess = false,
+                    Message = "Input or utput not found."
+                });
+            }
+            string sType = (inputOutputEntity.Type == 0) ? "Input" : "Output";
+            log.LogInformation($"Get {sType} by id:{id} recived.");
+
+            string message = $"{sType}: {id} retrieved";
+            log.LogInformation(message);
+
+            return new OkObjectResult(new Response
+            {
+                IsSuccess = true,
+                Message = message,
+                Result = inputOutputEntity
+            });
+        }
+
+        [FunctionName(nameof(DeleteInputAndOutputById))]
+        public static async Task<IActionResult> DeleteInputAndOutputById(
+           [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "inputoutput/{id}")] HttpRequest req,
+           [Table("inputoutput", "INPUTOUPUT", "{id}", Connection = "AzureWebJobsStorage")] InputOutputEntity inputOutputEntity,
+           [Table("inputoutput", Connection = "AzureWebJobsStorage")] CloudTable todoTable,
+           string id,
+           ILogger log)
+        {
+            if (inputOutputEntity == null)
+            {
+                return new BadRequestObjectResult(new Response
+                {
+                    IsSuccess = false,
+                    Message = "Todo not found."
+                });
+            }
+            string sType = (inputOutputEntity.Type == 0) ? "Input" : "Output";
+            log.LogInformation($"Delete {sType}: {id}, recived.");
+
+            await todoTable.ExecuteAsync(TableOperation.Delete(inputOutputEntity));
+            string message = $"{sType}: {inputOutputEntity.RowKey}, deleted.";
+            log.LogInformation(message);
+
+            return new OkObjectResult(new Response
+            {
+                IsSuccess = true,
+                Message = message,
+                Result = inputOutputEntity
             });
         }
 

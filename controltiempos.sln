@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31613.86
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "controltiempos.Common", "controltiempos.Common\controltiempos.Common.csproj", "{A882978A-AC50-4EE4-B0EE-F6A1C73CFA74}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "controltiempos.Common", "controltiempos.Common\controltiempos.Common.csproj", "{A882978A-AC50-4EE4-B0EE-F6A1C73CFA74}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "controltiempos.Function", "controltiempos.Function\controltiempos.Function.csproj", "{D01C3892-B872-4503-ABAA-1D3B69FB615F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "controltiempos.Function", "controltiempos.Function\controltiempos.Function.csproj", "{D01C3892-B872-4503-ABAA-1D3B69FB615F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "controltiempos.Tests", "controltiempos.Tests\controltiempos.Tests.csproj", "{095B538E-89F8-4E5C-9EB2-EF53E57A6D6C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "controltiempos.Tests", "controltiempos.Tests\controltiempos.Tests.csproj", "{095B538E-89F8-4E5C-9EB2-EF53E57A6D6C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

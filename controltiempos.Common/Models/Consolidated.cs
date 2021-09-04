@@ -1,11 +1,10 @@
-﻿using Microsoft.WindowsAzure.Storage.Table;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace controltiempos.Function.Entities
+namespace controltiempos.Common.Models
 {
-    public class ConsolidEntity : TableEntity
+    public class Consolidated
     {
         public int EmployeeId { get; set; }
         public DateTime WorkDate { get; set; }

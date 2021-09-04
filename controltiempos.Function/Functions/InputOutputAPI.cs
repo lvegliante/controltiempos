@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
-using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.Table;
 using Newtonsoft.Json;
 using System;
@@ -18,8 +17,8 @@ namespace controltiempos.Function.Functions
     public static class InputOutputAPI
     {
 
-        [FunctionName(nameof(ConsolidateInputsAndOutputs))]
-        public static async Task<IActionResult> ConsolidateInputsAndOutputs(
+        [FunctionName(nameof(CreateInputsAndOutputs))]
+        public static async Task<IActionResult> CreateInputsAndOutputs(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "inputoutput")] HttpRequest req,
             [Table("inputoutput", Connection = "AzureWebJobsStorage")] CloudTable timesTable,
             ILogger log)
@@ -233,6 +232,43 @@ namespace controltiempos.Function.Functions
             });
         }
 
+        [FunctionName(nameof(ConsolitedDate))]
+        public static async Task<IActionResult> ConsolitedDate(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "consolidated/{dateTime}")] HttpRequest req,
+            [Table("consolidated", Connection = "AzureWebJobsStorage")] CloudTable consolidatedTable, DateTime dateTime,
+            ILogger log)
+        {
+            if (consolidatedTable == null)
+            {
+                return new BadRequestObjectResult(new Response
+                {
+                    IsSuccess = false,
+                    Message = "Consolited not found."
+                });
+            }
+            string filter = TableQuery.GenerateFilterConditionForDate("WorkDate", QueryComparisons.LessThanOrEqual, dateTime.Date);
+            //string filter = TableQuery.CombineFilters(filterOne, TableOperators.And, filterTwo);
+            TableQuery<ConsolidatedEntity> query = new TableQuery<ConsolidatedEntity>().Where(filter);
+            TableQuerySegment<ConsolidatedEntity> consolitedMinutes = await consolidatedTable.ExecuteQuerySegmentedAsync(query, null);
+
+            if (consolitedMinutes == null)
+            {
+                return new BadRequestObjectResult(new Response
+                {
+                    IsSuccess = false,
+                    Message = "Consolited not found."
+                });
+            }
+            string message = "Retrieved all consolidated of minutes.";
+            log.LogInformation(message);
+
+            return new OkObjectResult(new Response
+            {
+                IsSuccess = true,
+                Message = message,
+                Result = consolitedMinutes
+            });
+        }
     }
 
 }

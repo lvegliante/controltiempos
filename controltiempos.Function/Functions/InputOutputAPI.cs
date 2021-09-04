@@ -23,39 +23,47 @@ namespace controltiempos.Function.Functions
             [Table("inputoutput", Connection = "AzureWebJobsStorage")] CloudTable timesTable,
             ILogger log)
         {
-            log.LogInformation($"Recibimos Ingreso\\Salida  del documento");
-
-
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            InputOutput inputOutput = JsonConvert.DeserializeObject<InputOutput>(requestBody);
-
-            if (inputOutput?.EmployeeId == null)
+            try
+            {
+                if(JsonConvert.DeserializeObject<InputOutput>(requestBody)== null){
+                    return new BadRequestObjectResult(new Response
+                    {
+                        IsSuccess = false,
+                        Message = "Id de Empleado invalido."
+                    });
+                }
+            }
+            catch (Exception)
             {
                 return new BadRequestObjectResult(new Response
                 {
                     IsSuccess = false,
-                    Message = "El Registro de Entrada/Salida Tener un Id de Empleado."
+                    Message = "Id de Empleado invalido."
                 });
             }
+            InputOutput inputOutput = JsonConvert.DeserializeObject<InputOutput>(requestBody);
+           
+            log.LogInformation($"Recibimos Ingreso o Salida del documento: {inputOutput.EmployeeId}");
+
             string filterOne = TableQuery.GenerateFilterConditionForInt("EmployeeId", QueryComparisons.Equal, inputOutput.EmployeeId);
             string filterTwo = TableQuery.GenerateFilterConditionForBool("IsConsolidated", QueryComparisons.Equal, false);
             string filter = TableQuery.CombineFilters(filterOne, TableOperators.And, filterTwo);
             TableQuery<InputOutputEntity> query = new TableQuery<InputOutputEntity>().Where(filter);
             TableQuerySegment<InputOutputEntity> empInpOut = await timesTable.ExecuteQuerySegmentedAsync(query, null);
             DateTime dateTime = DateTime.UtcNow.AddDays(-5);
-
             int type = 1;
 
-                foreach (InputOutputEntity conInpOut in empInpOut)
+            foreach (InputOutputEntity conInpOut in empInpOut)
+            {
+                if (conInpOut.DateInputOrOutput > dateTime
+                    && conInpOut.DateInputOrOutput.Date == DateTime.UtcNow.Date)
                 {
-                    if (conInpOut.DateInputOrOutput > dateTime 
-                        && conInpOut.DateInputOrOutput.Date == DateTime.UtcNow.Date)
-                    {
-                        dateTime = conInpOut.DateInputOrOutput;
-                        type = conInpOut.Type;
-                    }
+                    dateTime = conInpOut.DateInputOrOutput;
+                    type = conInpOut.Type;
                 }
-   
+            }
+
             type = (type == 0) ? 1 : 0;
             string sType = (type == 0) ? "Entrada" : "Salida";
 
@@ -82,5 +90,65 @@ namespace controltiempos.Function.Functions
                 Result = inputOutputEntity
             });
         }
+
+        [FunctionName(nameof(EditedInputsAndOutputs))]
+        public static async Task<IActionResult> EditedInputsAndOutputs(
+                [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "inputoutput/{id}")] HttpRequest req,
+                [Table("inputoutput", Connection = "AzureWebJobsStorage")] CloudTable timesTable, string id,
+                ILogger log)
+        {
+            log.LogInformation($"Update for todo: {id}, recived.");
+            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            try
+            {
+                if (JsonConvert.DeserializeObject<InputOutput>(requestBody) == null)
+                {
+                    return new BadRequestObjectResult(new Response
+                    {
+                        IsSuccess = false,
+                        Message = "Id de Empleado invalido."
+                    });
+                }
+            }
+            catch (Exception)
+            {
+                return new BadRequestObjectResult(new Response
+                {
+                    IsSuccess = false,
+                    Message = "Edited Input or Ouput not found."
+                });
+            }
+            InputOutput inputOutput = JsonConvert.DeserializeObject<InputOutput>(requestBody);
+            TableOperation findOperation = TableOperation.Retrieve<InputOutputEntity>("INPUTOUPUT", id);
+            TableResult findfResult = await timesTable.ExecuteAsync(findOperation);
+
+            if (findfResult.Result == null)
+            {
+                return new BadRequestObjectResult(new Response
+                {
+                    IsSuccess = false,
+                    Message = "Input or Ouput not found."
+                });
+            }
+
+            InputOutputEntity inputOutputEntity = (InputOutputEntity)findfResult.Result;
+            inputOutputEntity.DateInputOrOutput = inputOutput.DateInputOrOutput;
+            inputOutputEntity.IsConsolidated = inputOutput.IsConsolidated;
+
+            TableOperation addOperation = TableOperation.Replace(inputOutputEntity);
+            await timesTable.ExecuteAsync(addOperation);
+            string sType = (inputOutputEntity.Type == 0) ? "Input" : "Ouput";
+            string message = $"{sType}: {id}, updated in table.";
+            log.LogInformation(message);
+
+            return new OkObjectResult(new Response
+            {
+                IsSuccess = true,
+                Message = message,
+                Result = inputOutputEntity
+            });
+        }
     }
+
+
 }

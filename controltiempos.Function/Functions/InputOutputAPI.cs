@@ -26,7 +26,8 @@ namespace controltiempos.Function.Functions
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             try
             {
-                if(JsonConvert.DeserializeObject<InputOutput>(requestBody)== null){
+                if (JsonConvert.DeserializeObject<InputOutput>(requestBody) == null)
+                {
                     return new BadRequestObjectResult(new Response
                     {
                         IsSuccess = false,
@@ -43,7 +44,7 @@ namespace controltiempos.Function.Functions
                 });
             }
             InputOutput inputOutput = JsonConvert.DeserializeObject<InputOutput>(requestBody);
-           
+
             log.LogInformation($"Recibimos Ingreso o Salida del documento: {inputOutput.EmployeeId}");
 
             string filterOne = TableQuery.GenerateFilterConditionForInt("EmployeeId", QueryComparisons.Equal, inputOutput.EmployeeId);
@@ -148,6 +149,28 @@ namespace controltiempos.Function.Functions
                 Result = inputOutputEntity
             });
         }
+
+        [FunctionName(nameof(GetAllInputsAndOutputs))]
+        public static async Task<IActionResult> GetAllInputsAndOutputs(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "inputoutput")] HttpRequest req,
+            [Table("inputoutput", Connection = "AzureWebJobsStorage")] CloudTable todoTable,
+            ILogger log)
+        {
+            log.LogInformation("Get all todos recived.");
+
+            TableQuery<InputOutputEntity> query = new TableQuery<InputOutputEntity>();
+            TableQuerySegment<InputOutputEntity> inputOutputs = await todoTable.ExecuteQuerySegmentedAsync(query, null);
+            string message = "Retrieved all todos.";
+            log.LogInformation(message);
+
+            return new OkObjectResult(new Response
+            {
+                IsSuccess = true,
+                Message = message,
+                Result = inputOutputs
+            });
+        }
+
     }
 
 

@@ -10,6 +10,7 @@ using Microsoft.WindowsAzure.Storage.Table;
 using Newtonsoft.Json;
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace controltiempos.Function.Functions
@@ -23,6 +24,7 @@ namespace controltiempos.Function.Functions
             [Table("inputoutput", Connection = "AzureWebJobsStorage")] CloudTable timesTable,
             ILogger log)
         {
+
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             try
             {
@@ -44,7 +46,6 @@ namespace controltiempos.Function.Functions
                 });
             }
             InputOutput inputOutput = JsonConvert.DeserializeObject<InputOutput>(requestBody);
-
             log.LogInformation($"Recibimos Ingreso o Salida del documento: {inputOutput.EmployeeId}");
 
             string filterOne = TableQuery.GenerateFilterConditionForInt("EmployeeId", QueryComparisons.Equal, inputOutput.EmployeeId);
@@ -246,17 +247,17 @@ namespace controltiempos.Function.Functions
                     Message = "Consolited not found."
                 });
             }
-            string filter = TableQuery.GenerateFilterConditionForDate("WorkDate", QueryComparisons.LessThanOrEqual, dateTime.Date);
-            //string filter = TableQuery.CombineFilters(filterOne, TableOperators.And, filterTwo);
+            Console.WriteLine("La fecha es: " + dateTime.Date);
+            string filter = TableQuery.GenerateFilterConditionForDate("WorkDate", QueryComparisons.GreaterThanOrEqual, dateTime.Date);
             TableQuery<ConsolidatedEntity> query = new TableQuery<ConsolidatedEntity>().Where(filter);
             TableQuerySegment<ConsolidatedEntity> consolitedMinutes = await consolidatedTable.ExecuteQuerySegmentedAsync(query, null);
 
-            if (consolitedMinutes == null)
+            if (consolitedMinutes.Results.Count() == 0 || consolitedMinutes == null)
             {
                 return new BadRequestObjectResult(new Response
                 {
                     IsSuccess = false,
-                    Message = "Consolited not found."
+                    Message = "Consolidated not found."
                 });
             }
             string message = "Retrieved all consolidated of minutes.";

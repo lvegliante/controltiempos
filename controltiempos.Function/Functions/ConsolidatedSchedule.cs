@@ -38,7 +38,7 @@ namespace controltiempos.Function.Functions
                     tempEmploy = entityTemp.EmployeeId;
                     tempType = entityTemp.Type;
                     tempRowKey = entityTemp.RowKey;
-
+                    
                 }
                 else if (entityTemp.Type == 1 && tempEmploy == entityTemp.EmployeeId && tempType == 0)
                 {
@@ -89,7 +89,7 @@ namespace controltiempos.Function.Functions
                             PartitionKey = "CONSOLIDATED",
                             RowKey = Guid.NewGuid().ToString()
                         };
-                        string message = $"Consolidado listo para el empleado: {entityTemp.EmployeeId}.";
+                        string message = $"Consolidated ready for the employee: {entityTemp.EmployeeId}.";
                         TableOperation addOperation = TableOperation.Insert(consolidatedEntity);
                         await consoliTable.ExecuteAsync(addOperation);
                         TableOperation operation = TableOperation.Retrieve<InputOutputEntity>("INPUTOUPUT", tempRowKey);
@@ -112,10 +112,11 @@ namespace controltiempos.Function.Functions
                         await inpOutTable.ExecuteAsync(operation);
                         log.LogInformation(message);
                     }
-                    
 
                 }
             }
+
+            log.LogInformation($"Consolidated successfully executed at: {DateTime.Now}");
         }
     }
 }

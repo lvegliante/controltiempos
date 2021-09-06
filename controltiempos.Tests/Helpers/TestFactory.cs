@@ -22,7 +22,8 @@ namespace controltiempos.Tests.Helpers
                 EmployeeId = 12345,
                 DateInputOrOutput = DateTime.UtcNow,
                 Type = 0,
-                IsConsolidated = true
+                IsConsolidated = true,
+                Timestamp = DateTime.UtcNow
             };
         }
 
@@ -35,7 +36,8 @@ namespace controltiempos.Tests.Helpers
                 RowKey = Guid.NewGuid().ToString(),
                 EmployeeId = 12345,
                 WorkDate = DateTime.UtcNow,
-                MinutesWorked = 0
+                MinutesWorked = 0,
+                Timestamp = DateTime.UtcNow
             };
         }
 
@@ -46,6 +48,18 @@ namespace controltiempos.Tests.Helpers
             {
                 Body = GenerateStreamFromString(request),
                 Path = $"/{inputOutputID}"
+            };
+        }
+
+        public static DefaultHttpRequest CreateHttpRequest(DateTime date, Consolidated consolidated)
+        { 
+            string request = JsonConvert.SerializeObject(consolidated);
+             
+            return new DefaultHttpRequest(new DefaultHttpContext())
+            {
+                Body = GenerateStreamFromString(request),
+                Path = $"/{date.Date.ToString("dd-MM-yyyy")}"
+
             };
         }
 
@@ -95,7 +109,7 @@ namespace controltiempos.Tests.Helpers
         {
             return new InputOutput
             {
-                EmployeeId = 123,
+                EmployeeId = 12345,
                 DateInputOrOutput = DateTime.UtcNow,
                 IsConsolidated = false,
                 Type = 0,
@@ -107,7 +121,7 @@ namespace controltiempos.Tests.Helpers
             return new Consolidated
             {
                 EmployeeId = 12345,
-                MinutesWorked = 0,
+                MinutesWorked = 5,
                 WorkDate = DateTime.UtcNow
             };
         }

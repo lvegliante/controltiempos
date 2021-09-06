@@ -24,7 +24,6 @@ namespace controltiempos.Function.Functions
             [Table("inputoutput", Connection = "AzureWebJobsStorage")] CloudTable timesTable,
             ILogger log)
         {
-
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             try
             {
@@ -238,6 +237,7 @@ namespace controltiempos.Function.Functions
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "consolidated/{dateTime}")] HttpRequest req,
             [Table("consolidated", Connection = "AzureWebJobsStorage")] CloudTable consolidatedTable, DateTime dateTime,
             ILogger log)
+
         {
             if (consolidatedTable == null)
             {
@@ -247,7 +247,6 @@ namespace controltiempos.Function.Functions
                     Message = "Consolited not found."
                 });
             }
-            Console.WriteLine("La fecha es: " + dateTime.Date);
             string filter = TableQuery.GenerateFilterConditionForDate("WorkDate", QueryComparisons.GreaterThanOrEqual, dateTime.Date);
             TableQuery<ConsolidatedEntity> query = new TableQuery<ConsolidatedEntity>().Where(filter);
             TableQuerySegment<ConsolidatedEntity> consolitedMinutes = await consolidatedTable.ExecuteQuerySegmentedAsync(query, null);

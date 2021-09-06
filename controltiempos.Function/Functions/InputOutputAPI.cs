@@ -239,6 +239,8 @@ namespace controltiempos.Function.Functions
             ILogger log)
 
         {
+        DateTime date2 = Convert.ToDateTime(dateTime.Date.ToString("dd-MM-yyyy"));
+            Console.WriteLine(date2.Date.AddHours(23).AddMinutes(59)+ "\n"+ Convert.ToDateTime(dateTime.Date.ToString("dd-MM-yyyy")));
             if (consolidatedTable == null)
             {
                 return new BadRequestObjectResult(new Response
@@ -247,7 +249,9 @@ namespace controltiempos.Function.Functions
                     Message = "Consolited not found."
                 });
             }
-            string filter = TableQuery.GenerateFilterConditionForDate("WorkDate", QueryComparisons.GreaterThanOrEqual, dateTime.Date);
+            string filter1 = TableQuery.GenerateFilterConditionForDate("WorkDate", QueryComparisons.GreaterThanOrEqual, Convert.ToDateTime(dateTime.Date.ToString("dd-MM-yyyy")));
+            string filter2 = TableQuery.GenerateFilterConditionForDate("WorkDate", QueryComparisons.LessThanOrEqual, date2.Date.AddHours(23).AddMinutes(59));
+            String filter = TableQuery.CombineFilters(filter1, TableOperators.And, filter2);
             TableQuery<ConsolidatedEntity> query = new TableQuery<ConsolidatedEntity>().Where(filter);
             TableQuerySegment<ConsolidatedEntity> consolitedMinutes = await consolidatedTable.ExecuteQuerySegmentedAsync(query, null);
 

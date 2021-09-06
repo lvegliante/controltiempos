@@ -32,7 +32,7 @@ namespace controltiempos.Function.Functions
                     return new BadRequestObjectResult(new Response
                     {
                         IsSuccess = false,
-                        Message = "Id de Empleado invalido."
+                        Message = "Employee Id not found."
                     });
                 }
             }
@@ -41,11 +41,11 @@ namespace controltiempos.Function.Functions
                 return new BadRequestObjectResult(new Response
                 {
                     IsSuccess = false,
-                    Message = "Id de Empleado invalido."
+                    Message = "Employee Id not found."
                 });
             }
             InputOutput inputOutput = JsonConvert.DeserializeObject<InputOutput>(requestBody);
-            log.LogInformation($"Recibimos Ingreso o Salida del documento: {inputOutput.EmployeeId}");
+            //log.LogInformation($"Recibimos Ingreso o Salida del documento: {inputOutput.EmployeeId}");
 
             string filterOne = TableQuery.GenerateFilterConditionForInt("EmployeeId", QueryComparisons.Equal, inputOutput.EmployeeId);
             string filterTwo = TableQuery.GenerateFilterConditionForBool("IsConsolidated", QueryComparisons.Equal, false);
@@ -66,7 +66,7 @@ namespace controltiempos.Function.Functions
             }
 
             type = (type == 0) ? 1 : 0;
-            string sType = (type == 0) ? "Entrada" : "Salida";
+            string sType = (type == 0) ? "Input" : "Output";
 
             InputOutputEntity inputOutputEntity = new InputOutputEntity
             {
@@ -79,7 +79,7 @@ namespace controltiempos.Function.Functions
                 RowKey = Guid.NewGuid().ToString(),
             };
 
-            string message = $"Nuevo Registro de {sType} para el Empleado: {inputOutput.EmployeeId}.";
+            string message = $"New Registration of {sType} for  Employe: {inputOutput.EmployeeId}.";
             TableOperation addOperation = TableOperation.Insert(inputOutputEntity);
             await timesTable.ExecuteAsync(addOperation);
             log.LogInformation(message);
@@ -107,7 +107,7 @@ namespace controltiempos.Function.Functions
                     return new BadRequestObjectResult(new Response
                     {
                         IsSuccess = false,
-                        Message = "Id de Empleado invalido."
+                        Message = "Id de Empleado not found."
                     });
                 }
             }
